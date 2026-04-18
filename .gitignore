@@ -25,3 +25,7 @@ dist-ssr
 
 # Playwright MCP
 .playwright-mcp/
+.vercel
+
+.mcp.json
+docs/
