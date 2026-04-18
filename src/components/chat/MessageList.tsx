@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react"
-import { User } from "lucide-react"
+import { MessageSquare, User } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MessageActions } from "./MessageActions"
+import { LinearCard } from "./LinearCard"
 import { useMessages } from "@/hooks/useMessages"
+import { useChatStore } from "@/stores/chatStore"
 import type { Message } from "@/stores/chatStore"
 
 function formatTime(dateStr: string) {
@@ -13,12 +15,15 @@ function formatTime(dateStr: string) {
 
 function isSameGroup(prev: Message | undefined, curr: Message) {
   if (!prev || prev.user_id !== curr.user_id) return false
+  if (curr.message_type !== "text" || prev.message_type !== "text") return false
   const diff = new Date(curr.created_at).getTime() - new Date(prev.created_at).getTime()
   return diff < 60_000
 }
 
 export function MessageList({ channelId }: { channelId: string }) {
   const { data: messages = [] } = useMessages(channelId)
+  const openThread = useChatStore((s) => s.openThread)
+  const currentThreadId = useChatStore((s) => s.currentThreadId)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -26,7 +31,7 @@ export function MessageList({ channelId }: { channelId: string }) {
   }, [messages])
 
   return (
-    <ScrollArea className="flex-1 px-4 py-2">
+    <ScrollArea className="flex-1 min-h-0 px-4 py-2">
       <div className="flex flex-col">
         {messages.map((msg, i) => {
           const grouped = isSameGroup(messages[i - 1], msg)
@@ -61,9 +66,25 @@ export function MessageList({ channelId }: { channelId: string }) {
                     </span>
                   </div>
                 )}
-                <p className="text-sm">{msg.content}</p>
+                {msg.message_type === "integration_card" && msg.metadata ? (
+                  <LinearCard metadata={msg.metadata} />
+                ) : (
+                  <p className="text-sm">{msg.content}</p>
+                )}
+                {(msg.reply_count ?? 0) > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => openThread(msg.id)}
+                    className={`mt-1 inline-flex items-center gap-1.5 rounded-md border border-transparent px-2 py-0.5 text-xs font-medium text-primary hover:border-border hover:bg-background ${
+                      currentThreadId === msg.id ? "border-border bg-background" : ""
+                    }`}
+                  >
+                    <MessageSquare className="h-3 w-3" />
+                    {msg.reply_count}개 답글
+                  </button>
+                )}
               </div>
-              <MessageActions />
+              <MessageActions onReply={() => openThread(msg.id)} />
             </div>
           )
         })}
