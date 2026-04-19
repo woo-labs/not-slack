@@ -9,6 +9,24 @@ export interface Channel {
   created_at: string
 }
 
+export interface GitHubPullRequestEvent {
+  id: string
+  channel_id: string
+  repository_full_name: string
+  action: string
+  pr_number: number
+  title: string
+  url: string
+  author_login: string
+  base_branch: string
+  head_branch: string
+  state: string
+  draft: boolean
+  merged: boolean
+  payload: Record<string, unknown>
+  created_at: string
+}
+
 export interface Message {
   id: string
   channel_id: string

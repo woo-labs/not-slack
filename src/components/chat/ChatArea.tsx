@@ -2,6 +2,8 @@ import { Hash, Search, Users, Pin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MessageList } from "./MessageList"
 import { MessageInput } from "./MessageInput"
+import { GitHubPullRequestList } from "@/components/github/GitHubPullRequestList"
+import { isGitHubPrChannel } from "@/lib/github"
 import { useChatStore } from "@/stores/chatStore"
 import { useChannels } from "@/hooks/useChannels"
 
@@ -17,6 +19,8 @@ export function ChatArea() {
       </div>
     )
   }
+
+  const githubChannel = isGitHubPrChannel(channel)
 
   return (
     <div className="flex flex-1 flex-col">
@@ -42,8 +46,14 @@ export function ChatArea() {
           </Button>
         </div>
       </div>
-      <MessageList channelId={channel.id} />
-      <MessageInput channelId={channel.id} channelName={channel.name ?? ""} />
+      {githubChannel ? (
+        <GitHubPullRequestList channelId={channel.id} />
+      ) : (
+        <>
+          <MessageList channelId={channel.id} />
+          <MessageInput channelId={channel.id} channelName={channel.name ?? ""} />
+        </>
+      )}
     </div>
   )
 }
