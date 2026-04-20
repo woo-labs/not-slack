@@ -5,6 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MessageActions } from "./MessageActions"
 import { useMessages } from "@/hooks/useMessages"
 import type { Message } from "@/stores/chatStore"
+import { isIntegrationCard } from "@/lib/integrations"
+import { useChatStore } from "@/stores/chatStore"
+import { IntegrationCard } from "@/components/integrations/IntegrationCard"
 
 function formatTime(dateStr: string) {
   const d = new Date(dateStr)
@@ -20,6 +23,7 @@ function isSameGroup(prev: Message | undefined, curr: Message) {
 export function MessageList({ channelId }: { channelId: string }) {
   const { data: messages = [] } = useMessages(channelId)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const setOpenThreadMessageId = useChatStore((s) => s.setOpenThreadMessageId)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -31,6 +35,15 @@ export function MessageList({ channelId }: { channelId: string }) {
         {messages.map((msg, i) => {
           const grouped = isSameGroup(messages[i - 1], msg)
           const displayName = msg.profiles?.display_name ?? msg.user_id.slice(0, 8)
+
+          if (isIntegrationCard(msg)) {
+            return (
+              <div key={msg.id} className="group relative px-2 py-2">
+                <IntegrationCard message={msg} onOpenThread={() => setOpenThreadMessageId(msg.id)} />
+              </div>
+            )
+          }
+
           return (
             <div
               key={msg.id}
@@ -63,7 +76,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                 )}
                 <p className="text-sm">{msg.content}</p>
               </div>
-              <MessageActions />
+              <MessageActions onOpenThread={() => setOpenThreadMessageId(msg.id)} />
             </div>
           )
         })}

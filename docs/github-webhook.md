@@ -1,41 +1,29 @@
 # GitHub webhook integration
 
-이 프로젝트는 `github-prs` 채널에서 GitHub Pull Request 이벤트를 보여줄 수 있습니다.
+이 브랜치는 `messages.integration_card` + `thread_id` 패턴으로 GitHub PR 이벤트를 Slack 스타일 카드로 보여줍니다.
 
-## 1. Supabase migration 적용
+## 적용 순서
 
 ```bash
 supabase db push
-```
-
-위 SQL은 `github_pr_events` 테이블을 만들고, `github-prs` 채널이 없으면 자동으로 생성합니다.
-
-## 2. Edge Function 배포
-
-```bash
-supabase functions deploy github-webhook
 supabase secrets set GITHUB_WEBHOOK_SECRET=your-secret
+supabase functions deploy github-webhook --no-verify-jwt
 ```
 
-Supabase 프로젝트 기본 환경변수인 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`는 Edge Function에서 같이 사용됩니다.
-
-## 3. GitHub webhook 설정
-
-GitHub 저장소 Settings -> Webhooks 에서 아래처럼 추가합니다.
+## GitHub webhook 설정
 
 - Payload URL: `https://<project-ref>.functions.supabase.co/github-webhook`
 - Content type: `application/json`
 - Secret: `GITHUB_WEBHOOK_SECRET`와 동일한 값
-- Events: `Pull requests`
+- Events: `Pull requests`, `Issue comments`, `Pull request reviews`
 
-## 4. 앱에서 확인
+## 구독 매핑
 
-웹훅이 들어오면 앱의 `github-prs` 채널에서 PR 카드가 실시간으로 보입니다.
+마이그레이션이 `github-prs` 채널을 만들고, `woo-labs/not-slack` 레포를 기본 구독으로 넣습니다.
+다른 GitHub repo를 보려면 `channel_subscriptions.external_id`를 `owner/repo` 값으로 추가하면 됩니다.
 
-## 권장 브랜치 이름
+## 동작 방식
 
-Git 브랜치에는 `:`가 들어갈 수 없어서 아래처럼 쓰는 것이 안전합니다.
-
-```bash
-feature/github-webhook
-```
+- `pull_request.opened`는 첫 카드로 채널에 쌓입니다.
+- `issue_comment`, `pull_request_review`, `pull_request.synchronize` 같은 후속 이벤트는 같은 `metadata.issue.id`를 기준으로 첫 카드의 스레드에 붙습니다.
+- `reply_count`는 카드 메타데이터에 반영되어 메인 채널이 깔끔하게 유지됩니다.
