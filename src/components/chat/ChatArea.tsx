@@ -2,13 +2,19 @@ import { Hash, Search, Users, Pin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MessageList } from "./MessageList"
 import { MessageInput } from "./MessageInput"
+import { useEffect } from "react"
 import { useChatStore } from "@/stores/chatStore"
 import { useChannels } from "@/hooks/useChannels"
 
 export function ChatArea() {
   const currentChannelId = useChatStore((s) => s.currentChannelId)
+  const setOpenThreadMessageId = useChatStore((s) => s.setOpenThreadMessageId)
   const { data: channels = [] } = useChannels()
   const channel = channels.find((c) => c.id === currentChannelId)
+
+  useEffect(() => {
+    setOpenThreadMessageId(null)
+  }, [currentChannelId, setOpenThreadMessageId])
 
   if (!channel) {
     return (

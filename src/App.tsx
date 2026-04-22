@@ -4,6 +4,7 @@ import { useAuthStore } from "@/stores/authStore"
 import { LoginPage } from "@/components/auth/LoginPage"
 import { Sidebar } from "@/components/layout/Sidebar"
 import { ChatArea } from "@/components/chat/ChatArea"
+import { ThreadPanel } from "@/components/chat/ThreadPanel"
 
 function App() {
   const { user, setUser } = useAuthStore()
@@ -29,9 +30,10 @@ function App() {
   if (!user) return <LoginPage />
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <Sidebar />
       <ChatArea />
+      <ThreadPanel />
     </div>
   )
 }

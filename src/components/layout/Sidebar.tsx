@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Hash, Plus, ChevronDown, LogOut, User } from "lucide-react"
+import { Hash, Plus, ChevronDown, LogOut, User, GitPullRequest } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/supabase"
+import { isGitHubPrChannel } from "@/lib/github"
 import { useChatStore } from "@/stores/chatStore"
 import { useAuthStore } from "@/stores/authStore"
 import { useChannels, useCreateChannel } from "@/hooks/useChannels"
@@ -76,7 +77,11 @@ export function Sidebar() {
             }`}
             onClick={() => setCurrentChannelId(ch.id)}
           >
-            <Hash className="h-4 w-4 shrink-0" />
+            {isGitHubPrChannel(ch) ? (
+              <GitPullRequest className="h-4 w-4 shrink-0" />
+            ) : (
+              <Hash className="h-4 w-4 shrink-0" />
+            )}
             <span className="flex-1 text-left truncate">{ch.name}</span>
           </Button>
         ))}
