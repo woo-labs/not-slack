@@ -29,3 +29,6 @@ dist-ssr
 
 .mcp.json
 docs/
+
+# Supabase local artifacts
+supabase/.temp/
