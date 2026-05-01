@@ -38,38 +38,81 @@ export interface GitHubCardMetadata extends IntegrationCardMetadataBase {
   }
 }
 
-export interface LinearCardMetadata extends IntegrationCardMetadataBase {
-  provider: "linear"
-  issue: IntegrationCardMetadataBase["issue"] & {
-    identifier: string
-    status: string
-  }
+export interface LinearIssueRef {
+  id?: string
+  identifier: string
+  title: string
+  url: string
 }
+
+export interface LinearStateRef {
+  name: string
+  type: string
+  color?: string
+}
+
+export interface LinearUserRef {
+  id?: string
+  name: string
+  avatarUrl?: string | null
+}
+
+export type LinearCardMetadata =
+  | {
+      provider: "linear"
+      event_type:
+        | "issue.created"
+        | "issue.removed"
+        | "issue.status_changed"
+        | "issue.completed"
+        | "issue.canceled"
+        | "issue.assigned"
+        | "issue.priority_changed"
+      issue: LinearIssueRef & {
+        state?: LinearStateRef
+        priority?: number
+        priorityLabel?: string
+        assignee?: LinearUserRef | null
+        team?: { id?: string; name?: string; key?: string }
+      }
+      changes?: Record<string, unknown>
+    }
+  | {
+      provider: "linear"
+      event_type: "comment.created"
+      issue: LinearIssueRef
+      comment: { id?: string; body: string; user?: LinearUserRef }
+    }
+
+export type MessageMetadata = GitHubCardMetadata | LinearCardMetadata
 
 export interface Message {
   id: string
   channel_id: string
   user_id: string
   thread_id: string | null
-  message_type: MessageType
   content: string
-  metadata: GitHubCardMetadata | LinearCardMetadata | null
   is_edited: boolean
   created_at: string
   updated_at: string
+  message_type: MessageType
+  metadata: MessageMetadata | null
+  reply_count?: number
   profiles?: { display_name: string; avatar_url: string | null }
 }
 
 interface ChatState {
   currentChannelId: string | null
   setCurrentChannelId: (id: string | null) => void
-  openThreadMessageId: string | null
-  setOpenThreadMessageId: (id: string | null) => void
+  currentThreadId: string | null
+  openThread: (id: string) => void
+  closeThread: () => void
 }
 
 export const useChatStore = create<ChatState>((set) => ({
   currentChannelId: null,
-  setCurrentChannelId: (id) => set({ currentChannelId: id }),
-  openThreadMessageId: null,
-  setOpenThreadMessageId: (id) => set({ openThreadMessageId: id }),
+  setCurrentChannelId: (id) => set({ currentChannelId: id, currentThreadId: null }),
+  currentThreadId: null,
+  openThread: (id) => set({ currentThreadId: id }),
+  closeThread: () => set({ currentThreadId: null }),
 }))
