@@ -11,6 +11,33 @@ export interface Channel {
 
 export type MessageType = "text" | "integration_card"
 
+export type IntegrationProvider = "github" | "linear"
+
+export interface IntegrationCardMetadataBase {
+  provider: IntegrationProvider
+  issue: {
+    id: string
+    title: string
+    url: string
+    reply_count?: number
+  }
+  event_type: string
+}
+
+export interface GitHubCardMetadata extends IntegrationCardMetadataBase {
+  provider: "github"
+  repository_full_name: string
+  issue: IntegrationCardMetadataBase["issue"] & {
+    number: number
+    author_login: string
+    state: string
+    draft: boolean
+    merged: boolean
+    base_branch: string
+    head_branch: string
+  }
+}
+
 export interface LinearIssueRef {
   id?: string
   identifier: string
@@ -57,6 +84,8 @@ export type LinearCardMetadata =
       comment: { id?: string; body: string; user?: LinearUserRef }
     }
 
+export type MessageMetadata = GitHubCardMetadata | LinearCardMetadata
+
 export interface Message {
   id: string
   channel_id: string
@@ -67,7 +96,7 @@ export interface Message {
   created_at: string
   updated_at: string
   message_type: MessageType
-  metadata: LinearCardMetadata | null
+  metadata: MessageMetadata | null
   reply_count?: number
   profiles?: { display_name: string; avatar_url: string | null }
 }
@@ -82,8 +111,7 @@ interface ChatState {
 
 export const useChatStore = create<ChatState>((set) => ({
   currentChannelId: null,
-  setCurrentChannelId: (id) =>
-    set({ currentChannelId: id, currentThreadId: null }),
+  setCurrentChannelId: (id) => set({ currentChannelId: id, currentThreadId: null }),
   currentThreadId: null,
   openThread: (id) => set({ currentThreadId: id }),
   closeThread: () => set({ currentThreadId: null }),

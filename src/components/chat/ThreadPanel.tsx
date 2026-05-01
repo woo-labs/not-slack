@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { LinearCard } from "./LinearCard"
+import { IntegrationCard } from "@/components/integrations/IntegrationCard"
 import { useChatStore } from "@/stores/chatStore"
 import { useThreadMessages, useSendThreadReply } from "@/hooks/useThreadMessages"
 import type { Message } from "@/stores/chatStore"
@@ -29,7 +30,9 @@ function MessageRow({ msg }: { msg: Message }) {
           <span className="text-sm font-bold">{displayName}</span>
           <span className="text-xs text-muted-foreground">{formatTime(msg.created_at)}</span>
         </div>
-        {msg.message_type === "integration_card" && msg.metadata ? (
+        {msg.message_type === "integration_card" && msg.metadata?.provider === "github" ? (
+          <IntegrationCard message={msg} compact />
+        ) : msg.message_type === "integration_card" && msg.metadata?.provider === "linear" ? (
           <LinearCard metadata={msg.metadata} />
         ) : (
           <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -70,9 +73,7 @@ export function ThreadPanel({ channelId }: { channelId: string }) {
         <div className="flex flex-col">
           <span className="text-sm font-bold">스레드</span>
           {!isLoading && (
-            <span className="text-xs text-muted-foreground">
-              {replies.length}개 답글
-            </span>
+            <span className="text-xs text-muted-foreground">{replies.length}개 답글</span>
           )}
         </div>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={closeThread}>
@@ -85,9 +86,7 @@ export function ThreadPanel({ channelId }: { channelId: string }) {
         {replies.length > 0 && (
           <div className="my-2 flex items-center gap-2 px-2">
             <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">
-              {replies.length}개 답글
-            </span>
+            <span className="text-xs text-muted-foreground">{replies.length}개 답글</span>
             <Separator className="flex-1" />
           </div>
         )}

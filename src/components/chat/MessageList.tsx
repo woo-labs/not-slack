@@ -7,6 +7,8 @@ import { LinearCard } from "./LinearCard"
 import { useMessages } from "@/hooks/useMessages"
 import { useChatStore } from "@/stores/chatStore"
 import type { Message } from "@/stores/chatStore"
+import { isIntegrationCard } from "@/lib/integrations"
+import { IntegrationCard } from "@/components/integrations/IntegrationCard"
 
 function formatTime(dateStr: string) {
   const d = new Date(dateStr)
@@ -36,6 +38,31 @@ export function MessageList({ channelId }: { channelId: string }) {
         {messages.map((msg, i) => {
           const grouped = isSameGroup(messages[i - 1], msg)
           const displayName = msg.profiles?.display_name ?? msg.user_id.slice(0, 8)
+
+          if (isIntegrationCard(msg)) {
+            if (msg.metadata?.provider === "github") {
+              return (
+                <div key={msg.id} className="group relative px-2 py-2">
+                  <IntegrationCard message={msg} onOpenThread={() => openThread(msg.id)} />
+                </div>
+              )
+            }
+
+            if (msg.metadata?.provider === "linear") {
+              return (
+                <div key={msg.id} className="group relative px-2 py-2">
+                  <LinearCard metadata={msg.metadata} />
+                </div>
+              )
+            }
+
+            return (
+              <div key={msg.id} className="group relative px-2 py-2">
+                <IntegrationCard message={msg} onOpenThread={() => openThread(msg.id)} />
+              </div>
+            )
+          }
+
           return (
             <div
               key={msg.id}
@@ -66,11 +93,7 @@ export function MessageList({ channelId }: { channelId: string }) {
                     </span>
                   </div>
                 )}
-                {msg.message_type === "integration_card" && msg.metadata ? (
-                  <LinearCard metadata={msg.metadata} />
-                ) : (
-                  <p className="text-sm">{msg.content}</p>
-                )}
+                <p className="text-sm">{msg.content}</p>
                 {(msg.reply_count ?? 0) > 0 && (
                   <button
                     type="button"

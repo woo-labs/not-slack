@@ -56,6 +56,7 @@ export function useMessages(channelId: string) {
 
           // 본인 메시지는 낙관적 업데이트로 이미 표시됨 → 스킵
           if (newMsg.user_id === currentUserId) return
+          if (newMsg.thread_id) return
 
           // 쓰레드 답글이면 부모 reply_count만 증가시키고 메인 리스트엔 추가하지 않음
           if (newMsg.thread_id) {
@@ -107,6 +108,8 @@ export function useSendMessage(channelId: string) {
       const { error } = await supabase.from("messages").insert({
         channel_id: channelId,
         user_id: user!.id,
+        message_type: "text",
+        metadata: null,
         content,
       })
       if (error) throw error
@@ -120,7 +123,9 @@ export function useSendMessage(channelId: string) {
         channel_id: channelId,
         user_id: user!.id,
         thread_id: null,
+        message_type: "text",
         content,
+        metadata: null,
         is_edited: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
